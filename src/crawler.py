@@ -3,19 +3,33 @@ Crawlt fussball.de AJAX-Endpoints für Spiele, Tabellen und Torschützen.
 Adaptiert von github.com/Zetabytes/fussball_de_api (MIT/Unlicense).
 """
 import logging
-import re
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
-from io import BytesIO
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 from zoneinfo import ZoneInfo
 
 import httpx
 from bs4 import BeautifulSoup, NavigableString, Tag
-from fonttools import ttLib
 
-from .config import FUSSBALL_DE_BASE_URL, CACHE_TTL, FONT_CACHE_TTL
+from .config import FUSSBALL_DE_BASE_URL, CACHE_TTL
+
+# ---------------------------------------------------------------------------
+# Font-Mapping (einmalig mit tools/extract_font_mapping.py extrahieren)
+#
+# Aufruf (lokal, einmalig):
+#   pip install httpx fonttools beautifulsoup4 lxml
+#   python tools/extract_font_mapping.py
+#
+# Die Ausgabe hier eintragen. Das Mapping ändert sich selten;
+# bei leeren Spielständen einfach erneut extrahieren.
+# ---------------------------------------------------------------------------
+FONT_MAPPING: Dict[str, str] = {
+    # Beispiel-Einträge – mit tatsächlicher Ausgabe des Extraction-Scripts ersetzen:
+    # "": "2",
+    # "": "3",
+    # ... (10-12 Einträge für Ziffern 0-9 und ":")
+}
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +40,8 @@ logger = logging.getLogger(__name__)
 @dataclass
 class MatchEvent:
     time: str
-    type: str          # goal | yellow-card | red-card | substitution | unknown
-    team: str          # home | away
+    type: str           # goal | yellow-card | red-card | substitution | unknown
+    team: str           # home | away
     description: Optional[str] = None
     score: Optional[str] = None
 
@@ -92,55 +106,19 @@ def _fetch(url: str) -> Optional[httpx.Response]:
 
 
 # ---------------------------------------------------------------------------
-# Font-Deobfuskierung
+# Font-Deobfuskierung (nutzt hardcodiertes FONT_MAPPING oben)
 # ---------------------------------------------------------------------------
 
-_FONT_DIGIT_MAPPING = {
-    "zero": "0", "one": "1", "two": "2", "three": "3", "four": "4",
-    "five": "5", "six": "6", "seven": "7", "eight": "8", "nine": "9",
-    "hyphen": ":",
-}
-
-_font_mapping_cache: Dict[str, dict] = {}
-
-
-def _get_font_mapping(font_name: str) -> Dict[str, str]:
-    entry = _font_mapping_cache.get(font_name)
-    if entry and entry["expires"] > time.time():
-        return entry["mapping"]
-
-    font_url = f"{FUSSBALL_DE_BASE_URL}/export.fontface/-/format/woff/id/{font_name}/type/font"
-    resp = _fetch(font_url)
-    if not resp:
-        return {}
-
-    try:
-        font = ttLib.TTFont(BytesIO(resp.content))
-        cmap = font.getBestCmap()
-        if not cmap:
-            return {}
-        mapping = {}
-        for code, name in cmap.items():
-            digit = _FONT_DIGIT_MAPPING.get(name)
-            if digit:
-                mapping[f"{code:x}"] = digit
-        _font_mapping_cache[font_name] = {
-            "mapping": mapping,
-            "expires": time.time() + FONT_CACHE_TTL,
-        }
-        return mapping
-    except ttLib.TTLibError as exc:
-        logger.warning("Font parse error for %s: %s", font_name, exc)
-        return {}
-
-
 def _deobfuscate(parent_tag) -> str:
+    """Dekodiert alle obfuskierten <span data-obfuscation> Elemente via FONT_MAPPING."""
     if not parent_tag:
         return ""
 
-    spans = parent_tag.find_all("span", attrs={"data-obfuscation": True})
-    font_names = {s["data-obfuscation"] for s in spans}
-    mappings = {fn: _get_font_mapping(fn) for fn in font_names}
+    if not FONT_MAPPING:
+        logger.warning(
+            "FONT_MAPPING ist leer! tools/extract_font_mapping.py einmalig "
+            "ausführen und Ergebnis in src/crawler.py eintragen."
+        )
 
     parts: List[str] = []
     stack = list(parent_tag.children) if hasattr(parent_tag, "children") else []
@@ -149,8 +127,9 @@ def _deobfuscate(parent_tag) -> str:
         node = stack.pop(0)
         if isinstance(node, Tag):
             if node.name == "span" and node.has_attr("data-obfuscation"):
-                m = mappings.get(node["data-obfuscation"], {})
-                decoded = "".join(m.get(f"{ord(c):x}", c) for c in (node.get_text() or ""))
+                decoded = "".join(
+                    FONT_MAPPING.get(c, "") for c in (node.get_text() or "")
+                )
                 parts.append(decoded)
             else:
                 stack[0:0] = list(node.children)
@@ -237,7 +216,6 @@ def _parse_games(html: str, fetch_events: bool = True) -> List[Game]:
     current_meta: dict = {}
 
     for row in soup.find_all("tr"):
-        # Zeile mit Datum/Wettbewerb
         if "visible-small" in row.get("class", []):
             cell = row.find("td")
             if not cell:
