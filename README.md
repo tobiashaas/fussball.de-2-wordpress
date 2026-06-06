@@ -2,24 +2,32 @@
 
 Tägliche, vollautomatische Synchronisation von fussball.de-Daten für alle Mannschaften des **FC Königsfeld** in WordPress Meta Box Felder – orchestriert durch einen n8n Workflow.
 
-**Synchronisiert werden:** Ergebnisse · Torschützen · Nächste Spiele · Ligatabelle
+**Synchronisiert werden:** Ergebnisse · Nächste Spiele · Ligatabelle
 
 ---
 
 ## Wie es funktioniert
 
 ```
-n8n (Hetzner) – täglich 03:00 Uhr
-  └── Execute Command → python -m src.main
-        ├── Liest alle Teams aus WordPress (REST API)
-        ├── Holt pro Team von fussball.de:
-        │     • Letzte Spiele + Torschützen
-        │     • Nächste Spiele
-        │     • Ligatabelle
-        └── Schreibt Daten in WordPress Meta Box Felder (REST API)
+n8n (täglich 03:00 Uhr)
+  └── WordPress Teams laden (REST API)
+        └── Nur Teams mit fussball_de_team_id
+              └── Pro Team:
+                    ├── fussball.de: Letzte Spiele (HTML) → parsen
+                    ├── fussball.de: Nächste Spiele (HTML) → parsen
+                    └── fussball.de: Tabelle (HTML) → parsen
+                          └── WordPress Meta Box Felder aktualisieren (REST API)
 ```
 
-**fussball.de obfuskiert Spielstände** mit einer Custom-Font. Das Mapping wird einmalig lokal extrahiert (→ `tools/extract_font_mapping.py`) und als Konstante im Code hinterlegt. Kein `fontTools` auf dem Server nötig.
+**fussball.de obfuskiert Spielstände** mit einer Custom-Font. Das Mapping wird einmalig lokal extrahiert (`tools/extract_font_mapping.py`) und als Konstante im n8n **Font Mapping** Node hinterlegt. Kein Python auf dem Server nötig.
+
+---
+
+## n8n Workflow
+
+**URL:** https://workflow.tobiashaas.dev/workflow/7wMDyaqf6II6y4Nw
+
+Der Workflow läuft komplett in n8n – keine externen Scripts, kein Server. Alle fussball.de-Anfragen und die WordPress-Aktualisierung laufen über HTTP Request Nodes, das HTML-Parsing und die Font-Deobfuskierung über JavaScript Code Nodes.
 
 ---
 
@@ -34,96 +42,76 @@ pip install httpx fonttools beautifulsoup4 lxml
 python tools/extract_font_mapping.py
 ```
 
-Die Ausgabe (~10 Zeilen) in `src/crawler.py` bei `FONT_MAPPING = { ... }` eintragen.
+Die Ausgabe sieht so aus:
 
-### 2. Auf dem Hetzner-Server installieren
-
-```bash
-git clone https://github.com/tobiashaas/fussball.de-2-wordpress.git /opt/fussball-sync
-cd /opt/fussball-sync
-
-python3 -m venv venv
-venv/bin/pip install -r requirements.txt
-
-cp .env.example .env
-nano .env  # Zugangsdaten eintragen
+```javascript
+const FONT_MAPPING = {
+  "": "2",
+  "": "3",
+  // ...
+};
 ```
 
-### 3. `.env` befüllen
+### 2. Font-Mapping in n8n eintragen
 
-```env
-CLUB_ID=00ES8GN9DO000062VV0AG08LVUPGND5I
-WP_URL=https://fc-koenigsfeld.de
-WP_USER=admin
-WP_APP_PASSWORD=xxxx xxxx xxxx xxxx xxxx xxxx
-```
+1. Workflow öffnen: https://workflow.tobiashaas.dev/workflow/7wMDyaqf6II6y4Nw
+2. Node **„Font Mapping"** öffnen
+3. `FONT_MAPPING = { ... }` mit den Werten aus Schritt 1 befüllen
+4. Speichern
 
-Das WordPress **Application Password** unter *WP-Admin → Benutzer → Profil → Anwendungspasswörter* erstellen.
-
-### 4. WordPress einrichten
+### 3. WordPress einrichten
 
 1. **Meta Box** Plugin aktivieren (kostenlos)
 2. **MB REST API** Addon aktivieren (kostenpflichtig oder via MB AIO)
 3. `MB_FieldGroups/fussball-de-sync.json` in Meta Box importieren → neue readonly Felder erscheinen bei jedem Team-Post
 4. `MB_FieldGroups/teams.json` importieren (fügt `fussball_de_team_id` Feld hinzu)
-5. Bei jedem Team-Post die **fussball.de Team-ID** eintragen (letztes Segment der Team-URL auf fussball.de)
+5. Bei jedem Team-Post die **fussball.de Team-ID** eintragen
 
-### 5. Test-Lauf
+Die Team-ID ist das letzte Segment der Team-URL auf fussball.de:
+`https://www.fussball.de/mannschaft/.../-/saison/.../team-id/`**`00ES8GN9DO000062VV0AG08LVUPGND5I-G`**
 
-```bash
-cd /opt/fussball-sync
-venv/bin/python -m src.main --dry-run   # Kein Schreiben nach WordPress
-venv/bin/python -m src.main             # Echter Lauf
-```
+### 4. Workflow aktivieren und testen
 
-### 6. n8n Workflow aktivieren
-
-Workflow: https://workflow.tobiashaas.dev/workflow/GRFypptop5qxdU5r
-
-- Läuft täglich um **03:00 Uhr**
-- Führt `cd /opt/fussball-sync && venv/bin/python -m src.main 2>&1` aus
-- Sendet bei Fehler eine E-Mail
+Im n8n Workflow:
+- **Manuell testen:** „Test Workflow" klicken → Execution Log prüfen
+- **Aktivieren:** Toggle oben rechts auf „Active" setzen
 
 ---
 
 ## Dateien
 
 ```
-src/
-  crawler.py        # fussball.de Scraper (HTML-Parsing + Font-Deobfuskierung)
-  wp_sync.py        # WordPress REST API Client
-  main.py           # CLI Entry Point (Exit 0 = OK, Exit 1 = Fehler)
-  config.py         # Konfiguration via .env
-
 tools/
   extract_font_mapping.py   # Einmaliges Hilfsskript – lokal ausführen
 
 MB_FieldGroups/
-  fussball-de-sync.json     # Neue Meta Box Fields (Sync-Daten, readonly)
-  teams.json                # Erweitert um fussball_de_team_id Feld
+  fussball-de-sync.json     # Meta Box Field Group (Sync-Daten, readonly)
+  teams.json                # Meta Box Field Group (erweitert um fussball_de_team_id)
 ```
 
-## Meta Box Felder (neu, automatisch befüllt)
+---
 
-Alle neuen Felder sind **readonly** und werden täglich überschrieben.
+## Meta Box Felder (automatisch befüllt)
+
+Alle Felder sind **readonly** und werden täglich überschrieben.
 
 | Feld | Typ | Inhalt |
 |---|---|---|
-| `fd_letzte_spiele` | Group (cloneable) | Letzte 10 Spiele mit Ergebnis |
+| `fd_letzte_spiele` | Group (cloneable, max 10) | Letzte Spiele mit Ergebnis |
 | `fd_letzte_spiele.fd_torschuetzen` | Group (cloneable) | Torschützen pro Spiel |
-| `fd_naechste_spiele` | Group (cloneable) | Nächste 5 Spiele |
-| `fd_tabelle` | Group (cloneable) | Komplette Ligatabelle |
+| `fd_naechste_spiele` | Group (cloneable, max 5) | Nächste 5 Spiele |
+| `fd_tabelle` | Group (cloneable, max 25) | Komplette Ligatabelle |
 | `fd_zuletzt_aktualisiert` | Datetime | Timestamp letzter Sync |
-| `fussball_de_team_id` | Text | **Manuell** setzen (einmalig) |
+| `fussball_de_team_id` | Text | **Manuell** setzen (einmalig pro Team) |
 
 ---
 
 ## Font-Mapping aktualisieren
 
-Falls fussball.de das Font-Mapping ändert (erkennbar an leeren Spielständen):
+Falls fussball.de das Font-Mapping ändert (erkennbar an leeren oder falschen Spielständen):
 
 ```bash
 # Lokal, einmalig:
 python tools/extract_font_mapping.py
-# → Ausgabe in src/crawler.py bei FONT_MAPPING eintragen
+# → Ausgabe in den "Font Mapping" Node im n8n Workflow eintragen
 ```
