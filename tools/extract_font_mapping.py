@@ -14,7 +14,7 @@ from io import BytesIO
 
 import httpx
 from bs4 import BeautifulSoup
-from fonttools import ttLib
+from fontTools import ttLib
 
 BASE = "https://www.fussball.de"
 
@@ -50,7 +50,7 @@ if not spans:
 font_names = list({s["data-obfuscation"] for s in spans})
 print(f"Gefundene Font-Namen: {font_names}")
 
-full_mapping: dict[str, str] = {}
+full_mapping = {}
 
 for font_name in font_names:
     font_url = f"{BASE}/export.fontface/-/format/woff/id/{font_name}/type/font"
