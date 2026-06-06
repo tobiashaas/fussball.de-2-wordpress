@@ -1,0 +1,296 @@
+{
+    "$schema": "https://schemas.metabox.io/field-group.json",
+    "autosave": false,
+    "default_hidden": false,
+    "fields": [
+        {
+            "name": "Letzte Spiele (fussball.de)",
+            "id": "fd_letzte_spiele",
+            "type": "group",
+            "collapsible": true,
+            "save_state": true,
+            "group_title": "{fd_spiel_datum} | {fd_heim} – {fd_auswaerts} {fd_ergebnis}",
+            "clone": true,
+            "sort_clone": false,
+            "clone_default": false,
+            "clone_as_multiple": false,
+            "clone_empty_start": true,
+            "max_clone": 10,
+            "hide_from_rest": false,
+            "fields": [
+                {
+                    "name": "Datum / Uhrzeit",
+                    "id": "fd_spiel_datum",
+                    "type": "datetime",
+                    "save_format": "Y-m-d H:i:s",
+                    "timestamp": false,
+                    "inline": false,
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false
+                },
+                {
+                    "name": "Liga",
+                    "id": "fd_spiel_liga",
+                    "type": "text",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false
+                },
+                {
+                    "name": "Heimmannschaft",
+                    "id": "fd_heim",
+                    "type": "text",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false,
+                    "columns": 5
+                },
+                {
+                    "name": "Ergebnis",
+                    "id": "fd_ergebnis",
+                    "type": "text",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false,
+                    "columns": 2
+                },
+                {
+                    "name": "Auswärtsmannschaft",
+                    "id": "fd_auswaerts",
+                    "type": "text",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false,
+                    "columns": 5
+                },
+                {
+                    "name": "Torschützen",
+                    "id": "fd_torschuetzen",
+                    "type": "group",
+                    "collapsible": false,
+                    "clone": true,
+                    "sort_clone": false,
+                    "clone_default": false,
+                    "clone_as_multiple": false,
+                    "clone_empty_start": true,
+                    "max_clone": 30,
+                    "hide_from_rest": false,
+                    "fields": [
+                        {
+                            "name": "Minute",
+                            "id": "fd_tor_minute",
+                            "type": "text",
+                            "disabled": true,
+                            "readonly": true,
+                            "clone": false,
+                            "hide_from_rest": false,
+                            "columns": 2
+                        },
+                        {
+                            "name": "Spieler",
+                            "id": "fd_tor_spieler",
+                            "type": "text",
+                            "disabled": true,
+                            "readonly": true,
+                            "clone": false,
+                            "hide_from_rest": false,
+                            "columns": 7
+                        },
+                        {
+                            "name": "Team",
+                            "id": "fd_tor_team",
+                            "type": "select",
+                            "options": {
+                                "home": "Heim",
+                                "away": "Auswärts"
+                            },
+                            "disabled": true,
+                            "readonly": true,
+                            "clone": false,
+                            "hide_from_rest": false,
+                            "columns": 3
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Nächste Spiele (fussball.de)",
+            "id": "fd_naechste_spiele",
+            "type": "group",
+            "collapsible": true,
+            "save_state": true,
+            "group_title": "{fd_spiel_datum} | {fd_heim} – {fd_auswaerts}",
+            "clone": true,
+            "sort_clone": false,
+            "clone_default": false,
+            "clone_as_multiple": false,
+            "clone_empty_start": true,
+            "max_clone": 5,
+            "hide_from_rest": false,
+            "fields": [
+                {
+                    "name": "Datum / Uhrzeit",
+                    "id": "fd_spiel_datum",
+                    "type": "datetime",
+                    "save_format": "Y-m-d H:i:s",
+                    "timestamp": false,
+                    "inline": false,
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false
+                },
+                {
+                    "name": "Liga",
+                    "id": "fd_spiel_liga",
+                    "type": "text",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false
+                },
+                {
+                    "name": "Heimmannschaft",
+                    "id": "fd_heim",
+                    "type": "text",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false,
+                    "columns": 6
+                },
+                {
+                    "name": "Auswärtsmannschaft",
+                    "id": "fd_auswaerts",
+                    "type": "text",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false,
+                    "columns": 6
+                }
+            ]
+        },
+        {
+            "name": "Tabelle (fussball.de)",
+            "id": "fd_tabelle",
+            "type": "group",
+            "collapsible": true,
+            "save_state": true,
+            "group_title": "{fd_platz}. {fd_team} – {fd_punkte} Punkte",
+            "clone": true,
+            "sort_clone": false,
+            "clone_default": false,
+            "clone_as_multiple": false,
+            "clone_empty_start": true,
+            "max_clone": 25,
+            "hide_from_rest": false,
+            "fields": [
+                {
+                    "name": "Platz",
+                    "id": "fd_platz",
+                    "type": "number",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false,
+                    "columns": 1
+                },
+                {
+                    "name": "Mannschaft",
+                    "id": "fd_team",
+                    "type": "text",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false,
+                    "columns": 4
+                },
+                {
+                    "name": "Sp",
+                    "id": "fd_spiele",
+                    "type": "number",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false,
+                    "columns": 1
+                },
+                {
+                    "name": "S",
+                    "id": "fd_siege",
+                    "type": "number",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false,
+                    "columns": 1
+                },
+                {
+                    "name": "U",
+                    "id": "fd_unentschieden",
+                    "type": "number",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false,
+                    "columns": 1
+                },
+                {
+                    "name": "N",
+                    "id": "fd_niederlagen",
+                    "type": "number",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false,
+                    "columns": 1
+                },
+                {
+                    "name": "Tore",
+                    "id": "fd_tore",
+                    "type": "text",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false,
+                    "columns": 2
+                },
+                {
+                    "name": "Punkte",
+                    "id": "fd_punkte",
+                    "type": "number",
+                    "disabled": true,
+                    "readonly": true,
+                    "clone": false,
+                    "hide_from_rest": false,
+                    "columns": 1
+                }
+            ]
+        },
+        {
+            "name": "Zuletzt aktualisiert",
+            "id": "fd_zuletzt_aktualisiert",
+            "type": "datetime",
+            "save_format": "Y-m-d H:i:s",
+            "timestamp": false,
+            "inline": false,
+            "disabled": true,
+            "readonly": true,
+            "clone": false,
+            "hide_from_rest": false
+        }
+    ],
+    "id": "fussball-de-sync",
+    "post_types": [
+        "teams"
+    ],
+    "title": "fussball.de Sync-Daten (automatisch)"
+}

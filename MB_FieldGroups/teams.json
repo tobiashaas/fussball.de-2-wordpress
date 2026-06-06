@@ -1,0 +1,150 @@
+{
+    "$schema": "https://schemas.metabox.io/field-group.json",
+    "autosave": false,
+    "default_hidden": false,
+    "exclude": {
+        "relation": "OR",
+        "ID": [
+            688
+        ]
+    },
+    "fields": [
+        {
+            "name": "Spielplan: Team-Kennung",
+            "id": "match_team_key",
+            "type": "select",
+            "options": {
+                "erste": "1. Mannschaft",
+                "zweite": "2. Mannschaft",
+                "dritte": "3. Mannschaft",
+                "jugend": "Jugend",
+                "ah": "Alte Herren (AH)"
+            },
+            "std": "erste",
+            "multiple": false,
+            "select_all_none": false,
+            "required": true,
+            "label_description": "Muss zu den Team-Werten in Club-Einstellungen → Spielplan (Feld \"Team\" pro Spiel) passen. Wird in MB Views für Filter (team_slug) genutzt, wenn der View auf einer Team-Seite eingebunden ist.",
+            "clone": false,
+            "clone_empty_start": false,
+            "hide_from_rest": false
+        },
+        {
+            "name": "fussball.de-Tabelle",
+            "id": "fussball_de_shortcode",
+            "type": "text",
+            "label_description": "Widget hier erstellen -> https://next.fussball.de/widgets und data-id=\"xxxxxxxxxxxxxxxxxxxxx\" Wert hier eingeben",
+            "placeholder": "022cd595-0d58-4123-84e6-2ab85478463b",
+            "required": false,
+            "disabled": false,
+            "readonly": false,
+            "clone": false,
+            "clone_empty_start": false,
+            "hide_from_rest": false,
+            "limit": 36,
+            "limit_type": "character"
+        },
+        {
+            "name": "fussball.de Team-ID",
+            "id": "fussball_de_team_id",
+            "type": "text",
+            "label_description": "Die Team-ID von fussball.de (letztes Segment der Team-URL). Wird für die automatische Datensynchronisation benötigt. Beispiel: 00ES8GN9DO000062VV0AG08LVUPGND5I-G",
+            "placeholder": "00ES8GN9DO000062VV0AG08LVUPGND5I-G",
+            "required": false,
+            "disabled": false,
+            "readonly": false,
+            "clone": false,
+            "clone_empty_start": false,
+            "hide_from_rest": false
+        },
+        {
+            "name": "Spielplan anzeigen",
+            "id": "spielplan_anzeigen",
+            "type": "switch",
+            "label_description": "Spielplan für Mannschaft auf Startseite anzeigen?",
+            "style": "rounded",
+            "on_label": "Ja",
+            "off_label": "Nein",
+            "std": false,
+            "required": false,
+            "clone": false,
+            "clone_empty_start": false,
+            "hide_from_rest": false
+        },
+        {
+            "name": "Weitere Spiele",
+            "id": "mb_views_weitere_spiele",
+            "type": "text",
+            "label_description": "Füge hier den Shortcode \"Weitere Spiele\" ein",
+            "desc": "MB Views Shortcode",
+            "placeholder": "[mbv name=\"spielplan-weitere-spiele\"]",
+            "required": false,
+            "disabled": false,
+            "readonly": false,
+            "clone": false,
+            "clone_empty_start": false,
+            "hide_from_rest": false,
+            "limit_type": "character",
+            "visible": {
+                "when": [
+                    [
+                        "spielplan_anzeigen",
+                        "=",
+                        1
+                    ]
+                ],
+                "relation": "or"
+            }
+        },
+        {
+            "name": "Letzte Spiele",
+            "id": "mb_views_letzte_spiele",
+            "type": "text",
+            "label_description": "Füge hier den Shortcode \"Letzte Spiele\" ein",
+            "desc": "MB Views Shortcode",
+            "placeholder": "[mbv name=\"spielplan-letzte-spiele\"]",
+            "required": false,
+            "disabled": false,
+            "readonly": false,
+            "clone": false,
+            "clone_empty_start": false,
+            "hide_from_rest": false,
+            "limit_type": "character",
+            "visible": {
+                "when": [
+                    [
+                        "spielplan_anzeigen",
+                        "=",
+                        1
+                    ]
+                ],
+                "relation": "or"
+            }
+        },
+        {
+            "name": "Kategorie",
+            "id": "team_category",
+            "type": "select",
+            "options": {
+                "Aktive": "Aktive",
+                "Jugend": "Jugend",
+                "Sonstiges": "Sonstiges"
+            },
+            "std": "Aktive",
+            "multiple": false,
+            "select_all_none": false,
+            "required": true,
+            "disabled": false,
+            "readonly": false,
+            "clone": false,
+            "clone_empty_start": false,
+            "hide_from_rest": false
+        }
+    ],
+    "id": "teams",
+    "modified": 1777147304,
+    "post_types": [
+        "teams"
+    ],
+    "title": "Mannschaften"
+}
